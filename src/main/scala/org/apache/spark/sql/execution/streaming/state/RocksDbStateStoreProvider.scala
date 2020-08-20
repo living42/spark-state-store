@@ -429,11 +429,12 @@ private[sql] class RocksDbStateStoreProvider extends StateStoreProvider with Log
       logInfo(s"Will download $fileToRead at location ${tmpLocFile.toString()}")
       if (downloadFile(fm, fileToRead, new Path(tmpLocFile.getAbsolutePath), sparkConf)) {
         FileUtility.extractTarFile(tmpLocFile.getAbsolutePath, versionTempPath)
-        if (!tmpLocDir.list().exists(_.endsWith(".sst"))) {
+        val currentFile = new File(new Path(tmpLocDir.toString, "CURRENT").toString)
+        if (!currentFile.exists()) {
           logWarning("Snapshot files are corrupted")
           throw new IOException(
             s"Error reading snapshot file $fileToRead of $this:" +
-              s" No SST files found")
+              s" No CURRENT file found")
         }
         FileUtils.moveDirectory(tmpLocDir, new File(rocksDbPath))
         true
